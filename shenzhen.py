@@ -12,17 +12,17 @@ jyxx="http://www.szse.cn/main/disclosure/news/dzjy/"     #大宗交易信息--�
 yysg="http://www.szse.cn/main/disclosure/news/yysg/"     #其他交易信息--要约收购：
 
 class Spyder:
-	def __init__(self,proxy_ip,try_time=5,sleep=0):
+	def __init__(self,proxy_ip,max_count=300,try_time=5,sleep=0):
+		self.count=1
+		self.max_count=max_count
 		self.proxy=proxy_ip
 		self.sleep=sleep
 		self.try_time=try_time
-		self.headers = {
-		'Connection' : 'keep-alive' ,
-		'Accept' : '*/*' ,
+		self.headers = {'Connection' : 'keep-alive' ,'Accept' : '*/*' ,
 		'User_Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36' ,
 		}
-		self.make_proxy()
-	def make_proxy(self):
+		self._make_proxy()
+	def _make_proxy(self):
 		ip=random.choice(self.proxy)
 		self.opener=urllib2.build_opener(urllib2.HTTPHandler)
 		proxy=urllib2.ProxyHandler({'http':'http://'+ip})
@@ -30,7 +30,10 @@ class Spyder:
 		print 'proxy change , new proxy ip:%s' % ip
 	def get_page(self,url):
 		req=urllib2.Request(url,headers=self.headers)
+		if self.count % self.max_count ==0:
+			self._make_proxy()
 		for i in range(self.try_time):
+			self.count +=1
 			try:
 				page=self.opener.open(req,timeout=i+1).read()
 				time.sleep(self.sleep)
@@ -38,7 +41,7 @@ class Spyder:
 				return page
 			except Exception, e :
 				print 'No%s to get %s failed for %s ' % (str(i+1),url,e)
-				self.make_proxy()
+				self._make_proxy()
 				continue
 if __name__=='__main__':
 	proxy_ip=['202.100.167.149:80']
